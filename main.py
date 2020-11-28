@@ -1,4 +1,5 @@
 from random import randint
+# from os import system
 
 # TILE TEMPLATE
 # tile = {
@@ -26,11 +27,9 @@ def display_title():
    (sudo mnswpr) If the game title doesn't fit your terminal, please readjust its size to fit the board.
 """
     print(title)
-    # NEW GAME
-    # EASY: 8x8, 10
-    # MEDIUM: 16*16, 40
-    # HARD: 24*24, 99
-    print("Select board difficulty:\n[1] EASY\n[2] MEDIUM\n[3] HARD\n[0] EXIT")
+    print("(sudo mnswpr) Select board difficulty:\n[1] EASY\n[2] MEDIUM\n[3] HARD\n[0] EXIT")
+    
+    # INPUT VALIDATION
     while True:
         try:
             choice = int(input("(sudo mnswpr) "))
@@ -41,6 +40,10 @@ def display_title():
         except TypeError:
             print("(sudo mnswpr) Not a valid input!")
         else:
+            # RETURN BOARD SIZES AND NO OF MINES
+            # EASY: 8x8, 10
+            # MEDIUM: 16*16, 40
+            # HARD: 24*24, 99
             if choice == 1:
                 return 8, 10
             elif choice == 2:
@@ -52,9 +55,11 @@ def display_title():
 # GRID AND MINE GENERATION
 def create_grid(size, mines):
     grid = []
-    for i in range(size):
+
+    # POPULATING THE GRID WITH TILES
+    for x in range(size):
         clmn = []
-        for j in range(size):
+        for y in range(size):
             clmn.append({
                 "isOpened": False,
                 "hasMine": False,
@@ -63,6 +68,7 @@ def create_grid(size, mines):
             })
         grid.append(clmn)
     
+    # GENERATING MINES
     mines_placed = 0
     while mines_placed < mines:
         x = randint(0, len(grid) - 1)
@@ -72,11 +78,14 @@ def create_grid(size, mines):
             tile["hasMine"] = True
             mines_placed += 1
 
+    # CALCULATE MINES ON ADJACENT TILES
     calculate_mines(grid)
     return grid
 
 # PRINT THE GRID
-def print_grid(grid):
+def print_grid():
+    global grid
+
     # LABEL
     tab = "     "
     col_label = ""
@@ -98,41 +107,60 @@ def print_grid(grid):
         st1 = ""
         st2 = ""
         st3 = ""
+        row_tab = ""
+        displayValue = ""
         for i in range(len(isOpened_values)):
             tile = grid[x][i]
+
+            # DETERMINE ROW TAB WIDTH
+            if (len(str(x + 1)) == 1):
+                row_tab = "  " + str(x + 1) + "  " 
+            else:
+                row_tab = " " + str(x + 1) + "  " 
+
             if not isOpened_values[i]:
+                # DETERMINE DISPLAY FOR FLAG
+                if tile["hasFlag"]:
+                    displayValue = "|░░F░░"
+                else:
+                    displayValue = "|░░░░░"
+
+                # STRING SETUPS
                 if i == 0:
                     st1 += tab + "|░░░░░"
-                    if (len(str(x + 1)) == 1):
-                        st2 += "  " + str(x + 1) + "  " + "|░░░░░"
-                    else:
-                        st2 += " " + str(x + 1) + "  " + "|░░░░░"
+                    st2 += row_tab + displayValue
                     st3 += tab + "|░░░░░"
                 elif i == len(grid) - 1:
                     st1 += "|░░░░░|"
-                    st2 += "|░░░░░|"
+                    st2 += displayValue + "|"
                     st3 += "|░░░░░|"
                 else:
                     st1 += "|░░░░░"
-                    st2 += "|░░░░░"
+                    st2 += displayValue
                     st3 += "|░░░░░"
             else:
+                # DETERMINE PRINT VALUES FOR REVEALED TILES
+                if tile["hasMine"]:
+                    displayValue = "X"
+                else:
+                    displayValue = str(tile["adjCount"])
+
+                # STRING SETUPS
                 if i == 0:
                     st1 += tab + "|     "
-                    if (len(str(x + 1)) == 1):
-                        st2 += "  " + str(x + 1) + "  " + "|" + "  " + str(tile["adjCount"]) + "  "
-                    else:
-                        st2 += " " + str(x + 1) + "  " + "|" + "  " + str(tile["adjCount"]) + "  "
+                    st2 += row_tab + "|" + "  " + displayValue + "  "
                     st3 += tab + "|_____"
                 elif i == len(grid) - 1:
                     st1 += "|     |"
-                    st2 += "|" + "  " + str(tile["adjCount"]) + "  " + "|"
+                    st2 += "|" + "  " + displayValue + "  " + "|"
                     st3 += "|_____|"
                 else:
                     st1 += "|     "
-                    st2 += "|" + "  " + str(tile["adjCount"]) + "  "
+                    st2 += "|" + "  " + displayValue + "  "
                     st3 += "|_____"
-        print(st1 + "\n" + st2 + "\n" + st3 )
+
+        print(st1 + "\n" + st2 + "\n" + st3)
+    print()
 
 # MINE DISPLAY NUMBER CALCULATOR
 def calculate_mines(grid):
@@ -143,7 +171,7 @@ def calculate_mines(grid):
             # CHECK AROUND THE TILE
             if x > 0 and grid[x - 1][y]["hasMine"]:
                 grid[x][y]["adjCount"] += 1
-            if x < len(grid) - 1  and grid[x + 1][y]["hasMine"]:
+            if x < len(grid) - 1 and grid[x + 1][y]["hasMine"]:
                 grid[x][y]["adjCount"] += 1
             if y > 0 and grid[x][y - 1]["hasMine"]:
                 grid[x][y]["adjCount"] += 1
@@ -158,13 +186,150 @@ def calculate_mines(grid):
             if x < len(grid) - 1 and y < len(grid) - 1 and grid[x + 1][y + 1]["hasMine"]:
                 grid[x][y]["adjCount"] += 1
 
-# TODO: REVEAL TILE
+# MOVEMENT SELECTION
+def select_move():
+    global grid
+    
+    # INPUT VALIDATION
+    while True:
+        print("(sudo mnswpr) Type (row column) to select a tile from the board ex. 5 6")
+        try:
+            x, y = input("(sudo mnswpr) ").split(" ")
+            x = int(x) - 1
+            y = int(y) - 1
+            if x < 0 or x > len(grid) - 1 or y < 0 or y > len(grid) - 1:
+                raise ValueError
+        except ValueError:
+            print("(sudo mnswpr) Not a valid input!")
+        except TypeError:
+            print("(sudo mnswpr) Not a valid input!")
+        else:
+            tile = grid[x][y]
+            while True:
+                print("(sudo mnswpr) Select move:\n\t[1] Reveal Tile\n\t[2] Flag/Unflag Tile")
+                try:
+                    choice = int(input("(sudo mnswpr) "))
+                    if choice < 1 or choice > 2:
+                        raise ValueError
+                except ValueError:
+                    print("(sudo mnswpr) Not a valid input!")
+                except TypeError:
+                    print("(sudo msnwpr) Not a valid input!")
+                else:
+                    if choice == 1:
+                        if tile["isOpened"]:
+                            print("Tile already revealed!")
+                        elif tile["hasFlag"]:
+                            print("Flagged tiles cannot be revealed!")
+                        else:
+                            reveal_tile(x, y)
+                            print_grid()       
+                    elif choice == 2:
+                        flag_tile(x, y)
+                        print_grid()
+                    break
+            break
 
-# TODO: FLAG TILE
+# REVEAL TILE
+def reveal_tile(x, y):
+    global grid
+    global lose
+
+    if not grid[x][y]["isOpened"]:
+        grid[x][y]["isOpened"] = True
+        if not grid[x][y]["hasMine"]:
+            # RECURSIVE CALLS FOR WHEN TILE REVEALED IS A 0-TILE
+            if grid[x][y]["adjCount"] == 0:
+                if x > 0:
+                    reveal_tile(x - 1, y)
+                if x < len(grid) - 1:
+                    reveal_tile(x + 1, y)
+                if y > 0:
+                    reveal_tile(x, y - 1)
+                if y < len(grid) - 1:
+                    reveal_tile(x, y + 1)
+                if x > 0 and y > 0:
+                    reveal_tile(x - 1, y - 1)
+                if x > 0 and y < len(grid) - 1:
+                    reveal_tile(x - 1, y + 1)
+                if x < len(grid) - 1 and y > 0:
+                    reveal_tile(x + 1, y - 1)
+                if x < len(grid) - 1 and y < len(grid) - 1:
+                    reveal_tile(x + 1, y + 1)
+        else:
+            lose = True
+
+# FLAG AND UNFLAG TILE
+def flag_tile(x, y):
+    global grid
+
+    if grid[x][y]["hasFlag"]:
+        grid[x][y]["hasFlag"] = False
+    else:
+        grid[x][y]["hasFlag"] = True
+
+# REVEAL GRID
+def reveal_grid():
+    global grid
+
+    # OPEN ALL TILES
+    for x in range(len(grid)):
+        for y in range(len(grid)):
+            grid[x][y]["isOpened"] = True
+            
+    print_grid()
+
+# EXPORT SAVE
+def export_save():
+    global grid
+
+    save_file = open("save.csv", "w+")
+    for x in range(len(grid)):
+        for y in range(len(grid)):
+            tile = grid[x][y]
+            save_file.write("{},{},{},{}\n".format(tile["isOpened"], tile["hasMine"], tile["hasFlag"], tile["adjCount"]))
+    print("Game Saved!")
+
+# IMPORT SAVE
+def import_save():
+    global grid
+    global n
+
+    save_file = open("save.csv", "r")
+    save_data = []
+    for line in save_file:
+        save_data.append(line[:-1].split(","))
+
+    i = 0
+    for x in range(n):
+        for y in range(n):
+            isOpened_save = string_to_bool(save_data[i][0])
+            hasMine_save = string_to_bool(save_data[i][1])
+            hasFlag_save = string_to_bool(save_data[i][2])
+            grid[x][y] = {
+                "isOpened": isOpened_save,
+                "hasMine": hasMine_save,
+                "hasFlag": hasFlag_save,
+                "adjCount": int(save_data[i][3])
+            }
+            i += 1
+
+# STRING TO BOOL FOR IMPORTING
+def string_to_bool(string):
+    if string == "True":
+        return True
+    else:
+        return False
 
 # MAIN
 if __name__ == "__main__":
+    lose = False
     n, mines = display_title()
     grid = create_grid(n, mines)
+    print_grid()
 
-    print_grid(grid)
+    while not lose:
+        select_move()
+    else:
+        reveal_grid()
+        print("lol u suck") 
