@@ -1,5 +1,4 @@
 from random import randint
-# from os import system
 
 # TILE TEMPLATE
 # tile = {
@@ -9,49 +8,9 @@ from random import randint
 #     "adjCount": 0
 # }
 
-# TITLE MENU
-def display_title():
-    title = """
-        ___           ___                         ___                    ___           ___           ___           ___           ___         ___     
-       /\__\         /\  \         _____         /\  \                  /\  \         /\  \         /\__\         /\  \         /\  \       /\  \    
-      /:/ _/_        \:\  \       /::\  \       /::\  \                |::\  \        \:\  \       /:/ _/_       _\:\  \       /::\  \     /::\  \   
-     /:/ /\  \        \:\  \     /:/\:\  \     /:/\:\  \               |:|:\  \        \:\  \     /:/ /\  \     /\ \:\  \     /:/\:\__\   /:/\:\__\  
-    /:/ /::\  \   ___  \:\  \   /:/  \:\__\   /:/  \:\  \            __|:|\:\  \   _____\:\  \   /:/ /::\  \   _\:\ \:\  \   /:/ /:/  /  /:/ /:/  /  
-   /:/_/:/\:\__\ /\  \  \:\__\ /:/__/ \:|__| /:/__/ \:\__\          /::::|_\:\__\ /::::::::\__\ /:/_/:/\:\__\ /\ \:\ \:\__\ /:/_/:/  /  /:/_/:/__/___
-   \:\/:/ /:/  / \:\  \ /:/  / \:\  \ /:/  / \:\  \ /:/  /          \:\~~\  \/__/ \:\~~\~~\/__/ \:\/:/ /:/  / \:\ \:\/:/  / \:\/:/  /   \:\/:::::/  /
-    \::/ /:/  /   \:\  /:/  /   \:\  /:/  /   \:\  /:/  /            \:\  \        \:\  \        \::/ /:/  /   \:\ \::/  /   \::/__/     \::/~~/~~~~ 
-     \/_/:/  /     \:\/:/  /     \:\/:/  /     \:\/:/  /              \:\  \        \:\  \        \/_/:/  /     \:\/:/  /     \:\  \      \:\~~\     
-       /:/  /       \::/  /       \::/  /       \::/  /                \:\__\        \:\__\         /:/  /       \::/  /       \:\__\      \:\__\    
-       \/__/         \/__/         \/__/         \/__/                  \/__/         \/__/         \/__/         \/__/         \/__/       \/__/    
-   
-   (sudo mnswpr) If the game title doesn't fit your terminal, please readjust its size to fit the board.
 """
-    print(title)
-    print("(sudo mnswpr) Select board difficulty:\n[1] EASY\n[2] MEDIUM\n[3] HARD\n[0] EXIT")
-    
-    # INPUT VALIDATION
-    while True:
-        try:
-            choice = int(input("(sudo mnswpr) "))
-            if choice < 1 or choice > 3:
-                raise ValueError
-        except ValueError:
-            print("(sudo mnswpr) Not a valid input!")
-        except TypeError:
-            print("(sudo mnswpr) Not a valid input!")
-        else:
-            # RETURN BOARD SIZES AND NO OF MINES
-            # EASY: 8x8, 10
-            # MEDIUM: 16*16, 40
-            # HARD: 24*24, 99
-            if choice == 1:
-                return 8, 10
-            elif choice == 2:
-                return 16, 40
-            elif choice == 3:
-                return 24, 110
-                break
-
+    INTIALIZATION FUNCTIONS
+"""
 # GRID AND MINE GENERATION
 def create_grid(size, mines):
     grid = []
@@ -81,6 +40,187 @@ def create_grid(size, mines):
     # CALCULATE MINES ON ADJACENT TILES
     calculate_mines(grid)
     return grid
+
+# MINE DISPLAY NUMBER CALCULATOR
+def calculate_mines(grid):
+    for x in range(len(grid)):
+        for y in range(len(grid)):
+            if grid[x][y]["hasMine"]:
+                continue
+            # CHECK AROUND THE TILE
+            if x > 0 and grid[x - 1][y]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if x < len(grid) - 1 and grid[x + 1][y]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if y > 0 and grid[x][y - 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if y < len(grid) - 1 and grid[x][y + 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1 
+            if x > 0 and y > 0 and grid[x - 1][y - 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if x > 0 and y < len(grid) - 1 and grid[x - 1][y + 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if x < len(grid) - 1 and y > 0 and grid[x + 1][y - 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+            if x < len(grid) - 1 and y < len(grid) - 1 and grid[x + 1][y + 1]["hasMine"]:
+                grid[x][y]["adjCount"] += 1
+
+# DIFFICULTY SELECT
+def difficulty_select():
+    print("(sudo mnswpr) Select board difficulty:\n\t[1] EASY\n\t[2] MEDIUM\n\t[3] HARD")
+    
+    # INPUT VALIDATION
+    while True:
+        try:
+            choice = int(input("(sudo mnswpr) "))
+            if choice < 1 or choice > 3:
+                raise ValueError
+        except ValueError:
+            print("(sudo mnswpr) Not a valid input!")
+        except TypeError:
+            print("(sudo mnswpr) Not a valid input!")
+        else:
+            # RETURN BOARD SIZES AND NO OF MINES
+            # EASY: 8x8, 10
+            # MEDIUM: 16*16, 40
+            # HARD: 24*24, 99
+            if choice == 1:
+                return 8, 10
+            elif choice == 2:
+                return 16, 40
+            elif choice == 3:
+                return 24, 110
+                break
+
+"""
+    INPUT FUNCTIONS
+"""
+# MOVEMENT SELECTION
+def select_move(x, y):
+    global grid
+    
+    # INPUT VALIDATION
+    tile = grid[x][y]
+    while True:
+        print("(sudo mnswpr) Select move:\n\t[1] Reveal Tile\n\t[2] Flag/Unflag Tile")
+        try:
+            choice = int(input("(sudo mnswpr) "))
+            if choice < 1 or choice > 2:
+                raise ValueError
+        except ValueError:
+            print("(sudo mnswpr) Not a valid input!")
+        except TypeError:
+            print("(sudo msnwpr) Not a valid input!")
+        else:
+            if choice == 1:
+                if tile["isOpened"]:
+                    print("Tile already revealed!")
+                elif tile["hasFlag"]:
+                    print("Flagged tiles cannot be revealed!")
+                else:
+                    reveal_tile(x, y)  
+            elif choice == 2:
+                if tile["isOpened"]:
+                    print("Revealed tiles cannot be flagged!")
+                else:
+                    flag_tile(x, y)
+            break
+
+# DECISION BEFORE MOVEMENT
+def decision():
+    global gameloop
+    global saved
+
+    # INPUT VALIDATION
+    print("(sudo mnswpr) Type (row column) to select a tile from the board ex. 5 6 or ESC to save progress and quit.")
+    while True:
+        try:
+            user_input = input("(sudo mnswpr) ").split(" ")
+            input_length = len(user_input)
+            if input_length == 2:
+                x, y = user_input
+                x = int(x) - 1
+                y = int(y) - 1
+                if x < 0 or x > 7 or y < 0 or y > 7:
+                    raise ValueError
+            elif input_length == 1:
+                save = user_input[0]
+                if not save == "ESC":
+                    raise ValueError
+        except ValueError:
+            print("(sudo mnswpr) Not a valid input!")
+        except TypeError:
+            print("(sudo mnswpr) Not a valid input!")
+        else:
+            if input_length == 2:
+                select_move(x, y)
+            elif input_length == 1:
+                export_save()
+                gameloop = False
+                saved = True
+            break
+
+# FLAG AND UNFLAG TILE
+def flag_tile(x, y):
+    global grid
+
+    if grid[x][y]["hasFlag"]:
+        grid[x][y]["hasFlag"] = False
+    else:
+        grid[x][y]["hasFlag"] = True
+
+"""
+    RENDER FUNCTIONS
+"""
+# TITLE MENU
+def display_title():
+    global grid
+    global size
+    global mines
+
+    title = """
+        ___           ___                         ___                    ___           ___           ___           ___           ___         ___     
+       /\__\         /\  \         _____         /\  \                  /\  \         /\  \         /\__\         /\  \         /\  \       /\  \    
+      /:/ _/_        \:\  \       /::\  \       /::\  \                |::\  \        \:\  \       /:/ _/_       _\:\  \       /::\  \     /::\  \   
+     /:/ /\  \        \:\  \     /:/\:\  \     /:/\:\  \               |:|:\  \        \:\  \     /:/ /\  \     /\ \:\  \     /:/\:\__\   /:/\:\__\  
+    /:/ /::\  \   ___  \:\  \   /:/  \:\__\   /:/  \:\  \            __|:|\:\  \   _____\:\  \   /:/ /::\  \   _\:\ \:\  \   /:/ /:/  /  /:/ /:/  /  
+   /:/_/:/\:\__\ /\  \  \:\__\ /:/__/ \:|__| /:/__/ \:\__\          /::::|_\:\__\ /::::::::\__\ /:/_/:/\:\__\ /\ \:\ \:\__\ /:/_/:/  /  /:/_/:/__/___
+   \:\/:/ /:/  / \:\  \ /:/  / \:\  \ /:/  / \:\  \ /:/  /          \:\~~\  \/__/ \:\~~\~~\/__/ \:\/:/ /:/  / \:\ \:\/:/  / \:\/:/  /   \:\/:::::/  /
+    \::/ /:/  /   \:\  /:/  /   \:\  /:/  /   \:\  /:/  /            \:\  \        \:\  \        \::/ /:/  /   \:\ \::/  /   \::/__/     \::/~~/~~~~ 
+     \/_/:/  /     \:\/:/  /     \:\/:/  /     \:\/:/  /              \:\  \        \:\  \        \/_/:/  /     \:\/:/  /     \:\  \      \:\~~\     
+       /:/  /       \::/  /       \::/  /       \::/  /                \:\__\        \:\__\         /:/  /       \::/  /       \:\__\      \:\__\    
+       \/__/         \/__/         \/__/         \/__/                  \/__/         \/__/         \/__/         \/__/         \/__/       \/__/    
+   
+   (sudo mnswpr) If the game title doesn't fit your terminal, please readjust its size to fit the board.
+"""
+    print(title)
+    try:
+        file = open("save.csv", "r")
+    except FileNotFoundError:
+        size, mines = difficulty_select()
+        grid = create_grid(size, mines)
+    else:
+        print("(sudo mnswpr) You have a save file. Do you want to load from your save?\n\t[1] YES\n\t[2] NO")
+
+        # INPUT VALIDATION
+        while True:
+            try:
+                choice = int(input("(sudo mnswpr) "))
+                if choice < 1 or choice > 2:
+                    raise ValueError
+            except ValueError:
+                print("(sudo mnswpr) Not a valid input!")
+            except TypeError:
+                print("(sudo mnswpr) Not a valid input!")
+            else:
+                if choice == 1:
+                    print("(sudo mnswpr) Importing save...")
+                    import_save()
+                elif choice == 2:
+                    print("(sudo mnswpr) Creating new game...")
+                    size, mines = difficulty_select()
+                    grid = create_grid(size, mines)
+                break
 
 # PRINT THE GRID
 def print_grid():
@@ -162,81 +302,25 @@ def print_grid():
         print(st1 + "\n" + st2 + "\n" + st3)
     print()
 
-# MINE DISPLAY NUMBER CALCULATOR
-def calculate_mines(grid):
+# REVEAL GRID
+def reveal_grid():
+    global grid
+
+    # OPEN ALL TILES
     for x in range(len(grid)):
         for y in range(len(grid)):
-            if grid[x][y]["hasMine"]:
-                continue
-            # CHECK AROUND THE TILE
-            if x > 0 and grid[x - 1][y]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if x < len(grid) - 1 and grid[x + 1][y]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if y > 0 and grid[x][y - 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if y < len(grid) - 1 and grid[x][y + 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1 
-            if x > 0 and y > 0 and grid[x - 1][y - 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if x > 0 and y < len(grid) - 1 and grid[x - 1][y + 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if x < len(grid) - 1 and y > 0 and grid[x + 1][y - 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-            if x < len(grid) - 1 and y < len(grid) - 1 and grid[x + 1][y + 1]["hasMine"]:
-                grid[x][y]["adjCount"] += 1
-
-# MOVEMENT SELECTION
-def select_move():
-    global grid
-    
-    # INPUT VALIDATION
-    while True:
-        print("(sudo mnswpr) Type (row column) to select a tile from the board ex. 5 6")
-        try:
-            x, y = input("(sudo mnswpr) ").split(" ")
-            x = int(x) - 1
-            y = int(y) - 1
-            if x < 0 or x > len(grid) - 1 or y < 0 or y > len(grid) - 1:
-                raise ValueError
-        except ValueError:
-            print("(sudo mnswpr) Not a valid input!")
-        except TypeError:
-            print("(sudo mnswpr) Not a valid input!")
-        else:
-            tile = grid[x][y]
-            while True:
-                print("(sudo mnswpr) Select move:\n\t[1] Reveal Tile\n\t[2] Flag/Unflag Tile")
-                try:
-                    choice = int(input("(sudo mnswpr) "))
-                    if choice < 1 or choice > 2:
-                        raise ValueError
-                except ValueError:
-                    print("(sudo mnswpr) Not a valid input!")
-                except TypeError:
-                    print("(sudo msnwpr) Not a valid input!")
-                else:
-                    if choice == 1:
-                        if tile["isOpened"]:
-                            print("Tile already revealed!")
-                        elif tile["hasFlag"]:
-                            print("Flagged tiles cannot be revealed!")
-                        else:
-                            reveal_tile(x, y)
-                            print_grid()       
-                    elif choice == 2:
-                        flag_tile(x, y)
-                        print_grid()
-                    break
-            break
+            grid[x][y]["isOpened"] = True
+    print_grid()
 
 # REVEAL TILE
 def reveal_tile(x, y):
     global grid
-    global lose
+    global gameloop
+    global opened_tiles
 
     if not grid[x][y]["isOpened"]:
         grid[x][y]["isOpened"] = True
+        opened_tiles.append(grid[x][y])
         if not grid[x][y]["hasMine"]:
             # RECURSIVE CALLS FOR WHEN TILE REVEALED IS A 0-TILE
             if grid[x][y]["adjCount"] == 0:
@@ -257,28 +341,21 @@ def reveal_tile(x, y):
                 if x < len(grid) - 1 and y < len(grid) - 1:
                     reveal_tile(x + 1, y + 1)
         else:
-            lose = True
+            gameloop = False
 
-# FLAG AND UNFLAG TILE
-def flag_tile(x, y):
+# FLAG REMAINING TILES
+def flag_remain():
     global grid
 
-    if grid[x][y]["hasFlag"]:
-        grid[x][y]["hasFlag"] = False
-    else:
-        grid[x][y]["hasFlag"] = True
-
-# REVEAL GRID
-def reveal_grid():
-    global grid
-
-    # OPEN ALL TILES
+    # CHECK ALL TILES IF NOT OPENED AND NO FLAG
     for x in range(len(grid)):
         for y in range(len(grid)):
-            grid[x][y]["isOpened"] = True
-            
-    print_grid()
+            if not grid[x][y]["isOpened"] and not grid[x][y]["hasFlag"]:
+                grid[x][y]["hasFlag"] = True
 
+"""
+    MISCELLANEOUS FUNCTIONS
+"""
 # EXPORT SAVE
 def export_save():
     global grid
@@ -293,7 +370,8 @@ def export_save():
 # IMPORT SAVE
 def import_save():
     global grid
-    global n
+    global size
+    global mines
 
     save_file = open("save.csv", "r")
     save_data = []
@@ -301,18 +379,35 @@ def import_save():
         save_data.append(line[:-1].split(","))
 
     i = 0
-    for x in range(n):
-        for y in range(n):
+    size = int(len(save_data)**0.5)
+    for x in range(size):
+        clmn = []
+        for y in range(size):
             isOpened_save = string_to_bool(save_data[i][0])
             hasMine_save = string_to_bool(save_data[i][1])
             hasFlag_save = string_to_bool(save_data[i][2])
-            grid[x][y] = {
+            clmn.append({
                 "isOpened": isOpened_save,
                 "hasMine": hasMine_save,
                 "hasFlag": hasFlag_save,
                 "adjCount": int(save_data[i][3])
-            }
+            })
+            if hasMine_save:
+                mines += 1
             i += 1
+        grid.append(clmn)
+
+# CHECK WHEN TO BREAK LOOP
+def gameloop_check():
+    global gameloop
+    global opened_tiles
+    global size
+    global mines
+    global win
+
+    if len(opened_tiles) == size**2 - mines:
+        gameloop = False
+        win = True
 
 # STRING TO BOOL FOR IMPORTING
 def string_to_bool(string):
@@ -321,15 +416,60 @@ def string_to_bool(string):
     else:
         return False
 
-# MAIN
+"""
+    MAIN
+"""
 if __name__ == "__main__":
-    lose = False
-    n, mines = display_title()
-    grid = create_grid(n, mines)
-    print_grid()
+    # INITIALIZATION OF VARIABLES
+    gameloop = True
+    win = False
+    saved = False
+    grid = []
+    size = mines = 0
+    opened_tiles = []
 
-    while not lose:
-        select_move()
+    # SETTING UP
+    display_title()
+
+    # GAME LOOP
+    while gameloop:
+        # INPUT PROCESSING, UPDATE, AND RENDER
+        print_grid()
+        decision()
+        gameloop_check()
     else:
-        reveal_grid()
-        print("lol u suck") 
+        if win:
+            flag_remain()
+            print_grid()
+            print("All mines avoided!")
+            print("""
+      ___           ___           ___                                             ___                   
+     /\__\         /\  \         /\  \         _____                 ___         /\  \         _____    
+    /:/ _/_       /::\  \       /::\  \       /::\  \               /\__\       /::\  \       /::\  \   
+   /:/ /\  \     /:/\:\  \     /:/\:\  \     /:/\:\  \             /:/__/      /:/\:\  \     /:/\:\  \  
+  /:/ /::\  \   /:/  \:\  \   /:/  \:\  \   /:/  \:\__\           /::\  \     /:/  \:\  \   /:/ /::\__\ 
+ /:/__\/\:\__\ /:/__/ \:\__\ /:/__/ \:\__\ /:/__/ \:|__|          \/\:\  \   /:/__/ \:\__\ /:/_/:/\:|__|
+ \:\  \ /:/  / \:\  \ /:/  / \:\  \ /:/  / \:\  \ /:/  /           ~~\:\  \  \:\  \ /:/  / \:\/:/ /:/  /
+  \:\  /:/  /   \:\  /:/  /   \:\  /:/  /   \:\  /:/  /               \:\__\  \:\  /:/  /   \::/_/:/  / 
+   \:\/:/  /     \:\/:/  /     \:\/:/  /     \:\/:/  /                /:/  /   \:\/:/  /     \:\/:/  /  
+    \::/  /       \::/  /       \::/  /       \::/  /                /:/  /     \::/  /       \::/  /   
+     \/__/         \/__/         \/__/         \/__/                 \/__/       \/__/         \/__/    
+            """)
+        elif saved:
+            pass
+        else:
+            reveal_grid()
+            print("You stepped on a mine!")
+            print("""
+      ___           ___           ___           ___                    ___                         ___           ___     
+     /\__\         /\  \         /\  \         /\__\                  /\  \          ___          /\__\         /\  \    
+    /:/ _/_       /::\  \       |::\  \       /:/ _/_                /::\  \        /\  \        /:/ _/_       /::\  \   
+   /:/ /\  \     /:/\:\  \      |:|:\  \     /:/ /\__\              /:/\:\  \       \:\  \      /:/ /\__\     /:/\:\__\  
+  /:/ /::\  \   /:/ /::\  \   __|:|\:\  \   /:/ /:/ _/_            /:/  \:\  \       \:\  \    /:/ /:/ _/_   /:/ /:/  /  
+ /:/__\/\:\__\ /:/_/:/\:\__\ /::::|_\:\__\ /:/_/:/ /\__\          /:/__/ \:\__\  ___  \:\__\  /:/_/:/ /\__\ /:/_/:/__/___
+ \:\  \ /:/  / \:\/:/  \/__/ \:\~~\  \/__/ \:\/:/ /:/  /          \:\  \ /:/  / /\  \ |:|  |  \:\/:/ /:/  / \:\/:::::/  /
+  \:\  /:/  /   \::/__/       \:\  \        \::/_/:/  /            \:\  /:/  /  \:\  \|:|  |   \::/_/:/  /   \::/~~/~~~~ 
+   \:\/:/  /     \:\  \        \:\  \        \:\/:/  /              \:\/:/  /    \:\__|:|__|    \:\/:/  /     \:\~~\     
+    \::/  /       \:\__\        \:\__\        \::/  /                \::/  /      \::::/__/      \::/  /       \:\__\    
+     \/__/         \/__/         \/__/         \/__/                  \/__/        ~~~~           \/__/         \/__/            
+            """)
